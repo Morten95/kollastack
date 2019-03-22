@@ -1,0 +1,24 @@
+parameters:
+  key_name1: bachelor
+  name_lin2: kriger1
+  name_lin3: kriger2
+  image_lin: Ubuntu Server 16.04 LTS (Xenial Xerus) amd64
+  flavor_small: m1.small
+  flavor_medium: m1.medium
+  flavor_large: m1.large
+  public_net: ntnu-internal
+  private_net_name1: net1
+  private_net_cidr1: 192.168.51.0/24
+  private_net_gateway1: 192.168.51.1
+  private_net_pool_start1: 192.168.51.200
+  private_net_pool_end1: 192.168.51.250
+  private_net_name2: net2
+  private_net_cidr2: 192.168.52.0/24
+  private_net_gateway2: 192.168.52.1
+  private_net_pool_start2: 192.168.52.200
+  private_net_pool_end2: 192.168.52.250
+  sec_group_lin:
+        - default
+        - linux
+  sec_group_win:
+        - windows

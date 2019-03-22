@@ -1,0 +1,203 @@
+heat_template_version: 2013-05-23
+
+description: >
+  HOT template to create a new neutron network plus a router to the public
+  network, and for deploying two servers into the new network. The template also
+  assigns floating IP addresses to each server so they are routable from the
+  public network.
+parameters:
+  key_name1:
+    type: string
+    description: Name of keypair to assign to servers
+  name_lin2:
+    type: string
+    description: Name of the instance
+  name_lin3:
+    type: string
+    description: Name of the instance
+  image_lin:
+    type: string
+    description: Name of image to use for servers
+  flavor_medium:
+    type: string
+    description: Flavor to use for servers
+  flavor_small:
+    type: string
+    description: Flavor to use for servers
+  flavor_large:
+    type: string
+    description: Flavor to use for servers
+  public_net:
+    type: string
+    description: ID or name of public network for which floating IP addresses will be allocated
+  private_net_name1:
+    type: string
+    description: Name of private network to be created
+  private_net_cidr1:
+    type: string
+    description: Private network address (CIDR notation)
+  private_net_gateway1:
+    type: string
+    description: Private network gateway address
+  private_net_pool_start1:
+    type: string
+    description: Start of private network IP address allocation pool
+  private_net_pool_end1:
+    type: string
+    description: End of private network IP address allocation pool
+  private_net_name2:
+    type: string
+    description: Name of private network to be created
+  private_net_cidr2:
+    type: string
+    description: Private network address (CIDR notation)
+  private_net_gateway2:
+    type: string
+    description: Private network gateway address
+  private_net_pool_start2:
+    type: string
+    description: Start of private network IP address allocation pool
+  private_net_pool_end2:
+    type: string
+    description: End of private network IP address allocation pool
+  sec_group_lin:
+    type: comma_delimited_list
+    description: Security group for linux
+  sec_group_win:
+    type: comma_delimited_list
+    description: Security group for windows
+
+resources:
+  private_net1:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: private_net_name1 }
+
+  private_subnet1:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_net1 }
+      cidr: { get_param: private_net_cidr1 }
+      gateway_ip: { get_param: private_net_gateway1 }
+      allocation_pools:
+        - start: { get_param: private_net_pool_start1 }
+          end: { get_param: private_net_pool_end1 }
+  
+  private_net2:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: private_net_name2 }
+
+  private_subnet2:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_net2 }
+      cidr: { get_param: private_net_cidr2 }
+      gateway_ip: { get_param: private_net_gateway2 }
+      allocation_pools:
+        - start: { get_param: private_net_pool_start2 }
+          end: { get_param: private_net_pool_end2 }
+
+  router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: public_net }
+
+  router_interface1:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: private_subnet1 }
+
+  router_interface2:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: private_subnet2 }
+
+  kriger1:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: name_lin2 }
+      image: { get_param: image_lin }
+      flavor: { get_param: flavor_medium }
+      key_name: { get_param: key_name1 }
+      networks:
+        - port: { get_resource: kriger1_port1 }
+        - port: { get_resource: kriger1_port2 }
+
+  kriger1_port1:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net1 }
+      security_groups: { get_param: sec_group_lin }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet1 }
+
+  kriger1_port2:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net2 }
+      security_groups: { get_param: sec_group_lin }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet2 }
+
+  kriger1_floating_ip1:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: { get_param: public_net }
+      port_id: { get_resource: kriger1_port1 }
+
+  kriger2:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: name_lin3 }
+      image: { get_param: image_lin }
+      flavor: { get_param: flavor_medium }
+      key_name: { get_param: key_name1 }
+      networks:
+        - port: { get_resource: kriger2_port1 }
+        - port: { get_resource: kriger2_port2 }
+
+  kriger2_port1:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net1 }
+      security_groups: { get_param: sec_group_lin }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet1 }
+
+  kriger2_port2:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net2 }
+      security_groups: { get_param: sec_group_lin }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet2 }
+
+  kriger2_floating_ip1:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: { get_param: public_net }
+      port_id: { get_resource: kriger2_port1 }
+
+#outputs:
+  #manager_private_ip:
+    #description: IP address of manager in private network
+    #value: { get_attr: [ manager, first_address ] }
+  #manager_public_ip:
+    #description: Floating IP address of manager in public network
+    #value: { get_attr: [ manager_floating_ip, floating_ip_address ] }
+  #keystone_private_ip:
+    #description: IP address of keystone in private network
+    #value: { get_attr: [ keystone, first_address ] }
+  #keystone_public_ip:
+    #description: Floating IP address of keystone in public network
+    #value: { get_attr: [ keystone_floating_ip, floating_ip_address ] }
+  #nova_private_ip:
+    #description: IP address of nova in private network
+    #value: { get_attr: [ nova, first_address ] }
+  #nova_public_ip:
+    #description: Floating IP address of nova in public network
+    #value: { get_attr: [ nova_floating_ip, floating_ip_address ] }
