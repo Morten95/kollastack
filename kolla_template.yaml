@@ -66,6 +66,8 @@ parameters:
   sec_group_win:
     type: comma_delimited_list
     description: Security group for windows
+  my_param:
+    type: string
 
 resources:
   private_net1:
@@ -126,6 +128,12 @@ resources:
       networks:
         - port: { get_resource: kriger1_port1 }
         - port: { get_resource: kriger1_port2 }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: manager.sh }
+          params:
+            param1: { get_param: my_param }
 
   kriger1_port1:
     type: OS::Neutron::Port
@@ -159,6 +167,13 @@ resources:
       networks:
         - port: { get_resource: kriger2_port1 }
         - port: { get_resource: kriger2_port2 }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: agent.sh }
+          params:
+            param1: { get_param: my_param }
+
 
   kriger2_port1:
     type: OS::Neutron::Port

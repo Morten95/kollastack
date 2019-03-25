@@ -2,7 +2,7 @@ parameters:
   key_name1: bachelor
   name_lin2: kriger1
   name_lin3: kriger2
-  image_lin: Ubuntu Server 16.04 LTS (Xenial Xerus) amd64
+  image_lin: Ubuntu Server 18.04 LTS (Bionic Beaver) amd64
   flavor_small: m1.small
   flavor_medium: m1.medium
   flavor_large: m1.large
@@ -22,3 +22,4 @@ parameters:
         - linux
   sec_group_win:
         - windows
+  my_param: param
